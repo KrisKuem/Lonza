@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prague Workshop Tasks</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: one working column — status summary, filter bar, tasks grouped by preparation phase (T–3 weeks → after) */
+:root{
+  --bg:#F6F9F9; --surface:#FFFFFF; --soft:#EEF4F4; --line:#DCE6E6;
+  --fg:#16282A; --muted:#5F7072; --navy:#0E2841; --teal:#2F484C; --mint:#8EB8B8; --mint-soft:#D5ECEC;
+  --ok:#2E7D5B; --ok-soft:#DDF0E6; --warn:#A86A0B; --warn-soft:#FBEED6; --danger:#B3402F; --danger-soft:#F8E1DC;
+  --display:"Josefin Sans", Arial, sans-serif; --body:"Source Sans 3", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1A1F; --surface:#132429; --soft:#18303A; --line:#25404A;
+  --fg:#E6EFEF; --muted:#9DB2B4; --navy:#CFE4E4; --teal:#8EB8B8; --mint:#5E8E8E; --mint-soft:#1E3A40;
+  --ok:#6CC79A; --ok-soft:#173A2C; --warn:#E8B45A; --warn-soft:#3A2D14; --danger:#F08E7E; --danger-soft:#3E1F1A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1A1F; --surface:#132429; --soft:#18303A; --line:#25404A;
+  --fg:#E6EFEF; --muted:#9DB2B4; --navy:#CFE4E4; --teal:#8EB8B8; --mint:#5E8E8E; --mint-soft:#1E3A40;
+  --ok:#6CC79A; --ok-soft:#173A2C; --warn:#E8B45A; --warn-soft:#3A2D14; --danger:#F08E7E; --danger-soft:#3E1F1A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--display);font-size:30px;color:var(--navy);margin:0;line-height:1.1;text-wrap:balance}
+.eyebrow{font-family:var(--display);font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);font-weight:700}
+.sub{color:var(--muted);margin:4px 0 0}
+.summary{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,2fr);gap:20px}
+.prog .num{font-family:var(--display);font-size:40px;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1}
+.prog .lbl{color:var(--muted);font-size:13px}
+.bar{height:10px;background:var(--soft);border-radius:6px;overflow:hidden;display:flex;margin-top:10px}
+.bar i{display:block;height:100%}
+.bar .d{background:var(--ok)}.bar .p{background:var(--warn)}
+.counts{display:flex;gap:14px;margin-top:8px;font-size:13px;color:var(--muted);flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.owners{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+.owners .h{width:100%;font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-weight:700}
+.chip{border:1px solid var(--line);background:var(--soft);color:var(--fg);border-radius:16px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip b{color:var(--navy)}
+.chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--bg)}
+.chip[aria-pressed="true"] b{color:var(--bg)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input,select,textarea,button{font:inherit;color:var(--fg)}
+.toolbar input[type=search]{flex:1 1 220px;min-width:0}
+input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.btn{background:var(--teal);color:var(--bg);border:0;border-radius:6px;padding:8px 14px;font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--teal);border:1px solid var(--line)}
+.btn.danger{background:var(--danger);color:var(--bg)}
+#list{display:flex;flex-direction:column;gap:18px}
+.group{display:flex;flex-direction:column;gap:6px}
+.ghead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--mint);padding-bottom:4px}
+.ghead h2{font-family:var(--display);font-size:17px;color:var(--navy);margin:0}
+.ghead span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.task{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px}
+.task.s-progress{border-left-color:var(--warn)}
+.task.s-done{border-left-color:var(--ok)}
+.row{display:grid;grid-template-columns:28px minmax(0,1fr) 150px 130px 128px 30px;gap:10px;align-items:center;padding:8px 10px}
+.row .t{min-width:0;cursor:pointer}
+.row .t .tt{font-weight:600}
+.task.s-done .tt{text-decoration:line-through;color:var(--muted)}
+.row .t .cat{font-size:12px;color:var(--muted)}
+.row input[type=checkbox]{width:18px;height:18px;accent-color:var(--ok)}
+.row select,.row input[type=date]{padding:5px 6px;font-size:13px;width:100%}
+.more{background:none;border:0;color:var(--muted);cursor:pointer;font-size:16px}
+.detail{border-top:1px solid var(--line);padding:10px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.detail label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+.detail .full{grid-column:1/-1}
+.detail .acts{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.note{font-size:13px;color:var(--muted)}
+.empty,.notice{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:24px;text-align:center;color:var(--muted)}
+.notice.err{border-color:var(--danger);color:var(--danger);background:var(--danger-soft)}
+form.add{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;grid-template-columns:minmax(0,2fr) repeat(3,minmax(0,1fr)) auto;gap:10px;align-items:end}
+form.add label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:600}
+form.add h2{grid-column:1/-1;font-family:var(--display);font-size:16px;color:var(--navy);margin:0}
+@media (max-width:760px){
+  .summary{grid-template-columns:1fr}
+  .row{grid-template-columns:24px minmax(0,1fr) 30px;row-gap:6px}
+  .row .o,.row .s,.row .d{grid-column:2/3}
+  form.add{grid-template-columns:1fr}
+  .detail{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Lonza PMaaS · Prague on-site workshop</div>
+    <h1>Workshop task list</h1>
+    <p class="sub">Everything the facilitation team needs to prepare, run and follow up. Changes are saved in this browser — use <b>Export</b> to share the current state and <b>Import</b> to load a colleague’s file.</p>
+  </header>
+
+  <section class="summary" aria-label="Progress">
+    <div class="prog">
+      <div class="num" id="pct">–</div>
+      <div class="lbl">of tasks done</div>
+      <div class="bar"><i class="d" id="barD" style="width:0"></i><i class="p" id="barP" style="width:0"></i></div>
+      <div class="counts" id="counts"></div>
+    </div>
+    <div class="owners" id="owners"><div class="h">Open tasks per owner — click to filter</div></div>
+  </section>
+
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Search tasks" aria-label="Search tasks">
+    <select id="fPhase" aria-label="Filter by phase"><option value="">All phases</option></select>
+    <select id="fStatus" aria-label="Filter by status">
+      <option value="">All statuses</option><option value="open">Open</option><option value="progress">In progress</option><option value="done">Done</option><option value="notdone">Not done</option>
+    </select>
+    <button class="btn ghost" type="button" id="exp">Export JSON</button>
+    <button class="btn ghost" type="button" id="csv">Export CSV</button>
+    <label class="btn ghost" for="imp" style="cursor:pointer">Import</label><input type="file" id="imp" accept=".json,application/json" hidden>
+    <span class="note" id="saved"></span>
+  </div>
+
+  <div id="list"><div class="empty">Loading the shared task list…</div></div>
+
+  <form class="add" id="addForm" hidden>
+    <h2>Add a task</h2>
+    <label>Task<input id="nTitle" required placeholder="e.g. Confirm dinner place"></label>
+    <label>Phase<select id="nPhase"></select></label>
+    <label>Owner<select id="nOwner"></select></label>
+    <label>Due<input type="date" id="nDue"></label>
+    <button class="btn" type="submit">Add</button>
+  </form>
+  <p class="note" id="ro" hidden></p>
+<p class="note" style="text-align:right"><button class="btn ghost" type="button" id="reset">Reset to original list</button></p>
+</div>
+
+<script>
+const PHASES=["T–3 weeks","T–2 weeks","T–1 week","T–2 days","Day 1","Day 2","After the workshop"];
+const OWNERS=["Kristian","Liliana","Sandra","Giorgio","Pedro","Ina","Russell & Hardeep","All"];
+const STATUS={open:"Open",progress:"In progress",done:"Done"};
+const $=id=>document.getElementById(id);
+let tasks=[], canWrite=true, openId=null, ownerFilter="";
+const pending=new Set();
+
+for(const p of PHASES){$("fPhase").add(new Option(p,p));$("nPhase").add(new Option(p,p));}
+for(const o of OWNERS)$("nOwner").add(new Option(o,o));
+
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function opts(list,val,labels){return list.map(v=>`<option value="${esc(v)}"${v===val?" selected":""}>${esc(labels?labels[v]:v)}</option>`).join("");}
+
+function renderSummary(){
+  const n=tasks.length, d=tasks.filter(t=>t.status==="done").length, p=tasks.filter(t=>t.status==="progress").length;
+  $("pct").textContent=n?Math.round(d/n*100)+"%":"–";
+  $("barD").style.width=n?(d/n*100)+"%":"0"; $("barP").style.width=n?(p/n*100)+"%":"0";
+  $("counts").innerHTML=`<span><b>${n-d-p}</b> open</span><span><b>${p}</b> in progress</span><span><b>${d}</b> done</span><span><b>${n}</b> total</span>`;
+  const box=$("owners"); box.querySelectorAll(".chip").forEach(c=>c.remove());
+  for(const o of OWNERS){
+    const c=tasks.filter(t=>t.owner===o&&t.status!=="done").length;
+    if(!c&&!tasks.some(t=>t.owner===o))continue;
+    const b=document.createElement("button");b.className="chip";b.type="button";
+    b.setAttribute("aria-pressed",String(ownerFilter===o));
+    b.innerHTML=`${esc(o)} <b>${c}</b>`;
+    b.onclick=()=>{ownerFilter=ownerFilter===o?"":o;render();};
+    box.appendChild(b);
+  }
+}
+
+function visible(){
+  const q=$("q").value.trim().toLowerCase(), ph=$("fPhase").value, st=$("fStatus").value;
+  return tasks.filter(t=>(!ownerFilter||t.owner===ownerFilter)&&(!ph||t.phase===ph)
+    &&(!st||(st==="notdone"?t.status!=="done":t.status===st))
+    &&(!q||(t.title+" "+(t.category||"")+" "+(t.notes||"")).toLowerCase().includes(q)));
+}
+
+function taskHtml(t){
+  const dis=canWrite?"":" disabled";
+  const open=openId===t.id;
+  return `<div class="task s-${esc(t.status)}" data-id="${esc(t.id)}">
+  <div class="row">
+    <input type="checkbox" id="c-${esc(t.id)}" data-f="done" aria-label="Mark done"${t.status==="done"?" checked":""}${dis}>
+    <div class="t" data-toggle><div class="tt">${esc(t.title)}</div>${t.category?`<div class="cat">${esc(t.category)}</div>`:""}</div>
+    <select class="o" id="o-${esc(t.id)}" data-f="owner" aria-label="Owner"${dis}>${opts(OWNERS,t.owner)}</select>
+    <select class="s" id="s-${esc(t.id)}" data-f="status" aria-label="Status"${dis}>${opts(Object.keys(STATUS),t.status,STATUS)}</select>
+    <input class="d" type="date" id="d-${esc(t.id)}" data-f="due" aria-label="Due date" value="${esc(t.due||"")}"${dis}>
+    <button class="more" type="button" data-toggle aria-expanded="${open}" aria-label="Details">${open?"▴":"▾"}</button>
+  </div>
+  ${open?`<div class="detail">
+    <label class="full">Task<input id="ti-${esc(t.id)}" data-f="title" value="${esc(t.title)}"${dis}></label>
+    <label>Phase<select id="ph-${esc(t.id)}" data-f="phase"${dis}>${opts(PHASES,t.phase)}</select></label>
+    <label>Category<input id="ca-${esc(t.id)}" data-f="category" value="${esc(t.category||"")}"${dis}></label>
+    <label class="full">Notes<textarea id="no-${esc(t.id)}" data-f="notes" rows="2"${dis}>${esc(t.notes||"")}</textarea></label>
+    ${canWrite?`<div class="acts" data-acts><button class="btn ghost" type="button" data-del>Delete task</button></div>`:""}
+  </div>`:""}
+</div>`;
+}
+
+function render(){
+  renderSummary();
+  const list=$("list");
+  if(!tasks.length){list.innerHTML=`<div class="empty">No tasks yet.${canWrite?" Add the first one with the form below.":""}</div>`;return;}
+  const v=visible();
+  if(!v.length){list.innerHTML=`<div class="empty">No tasks match these filters.</div>`;return;}
+  let h="";
+  for(const p of PHASES){
+    const g=v.filter(t=>t.phase===p); if(!g.length)continue;
+    const all=tasks.filter(t=>t.phase===p), dn=all.filter(t=>t.status==="done").length;
+    h+=`<section class="group"><div class="ghead"><h2>${esc(p)}</h2><span>${dn} / ${all.length} done</span></div>${g.map(taskHtml).join("")}</section>`;
+  }
+  const other=v.filter(t=>!PHASES.includes(t.phase));
+  if(other.length)h+=`<section class="group"><div class="ghead"><h2>Unscheduled</h2><span></span></div>${other.map(taskHtml).join("")}</section>`;
+  list.innerHTML=h;
+}
+
+const KEY="prague-workshop-tasks-v1";
+const SEED=[{"id": "t01", "title": "Confirm venue booking and room set-up (plenary + 3 breakout areas)", "phase": "T–3 weeks", "category": "Venue & logistics", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 1}, {"id": "t02", "title": "Confirm dinner place, time and meeting point (Day 1, 18:00)", "phase": "T–3 weeks", "category": "Venue & logistics", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 2}, {"id": "t03", "title": "Confirm lunch on Day 2 (13:00)", "phase": "T–3 weeks", "category": "Venue & logistics", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 3}, {"id": "t04", "title": "Confirm venue provides sticky notes, pin boards / wall space, flipcharts (min. 4), whiteboard", "phase": "T–3 weeks", "category": "Venue & logistics", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 4}, {"id": "t05", "title": "Confirm projector, HDMI / USB-C adapter, power strip and extension cable", "phase": "T–3 weeks", "category": "Venue & logistics", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 5}, {"id": "t06", "title": "Send logistics info to all PMs (venue address, timings, dinner, travel)", "phase": "T–3 weeks", "category": "Communication", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 6}, {"id": "t07", "title": "Final confirmation of session owners", "phase": "T–2 weeks", "category": "People", "owner": "All", "status": "open", "due": "", "notes": "", "order": 1}, {"id": "t08", "title": "Fill PM overview slide (names, photos, locations, projects)", "phase": "T–2 weeks", "category": "Content", "owner": "Kristian", "status": "open", "due": "", "notes": "", "order": 2}, {"id": "t09", "title": "Write scenario cards – round 1 (stakeholders & governance)", "phase": "T–2 weeks", "category": "Content", "owner": "Giorgio", "status": "open", "due": "", "notes": "", "order": 3}, {"id": "t10", "title": "Write scenario cards – round 2 (delivery under pressure)", "phase": "T–2 weeks", "category": "Content", "owner": "Giorgio", "status": "open", "due": "", "notes": "", "order": 4}, {"id": "t11", "title": "Brief Russell & Hardeep on their 10-min survival guide input", "phase": "T–2 weeks", "category": "People", "owner": "Giorgio", "status": "open", "due": "", "notes": "", "order": 5}, {"id": "t12", "title": "Write Challenge Lab scenario briefs A, B and C", "phase": "T–2 weeks", "category": "Content", "owner": "Sandra", "status": "open", "due": "", "notes": "", "order": 6}, {"id": "t13", "title": "Select worked example project for Delivery Excellence", "phase": "T–2 weeks", "category": "Content", "owner": "Giorgio", "status": "open", "due": "", "notes": "", "order": 7}, {"id": "t14", "title": "Add quality gate / tollgate evidence to Delivery Excellence slide", "phase": "T–2 weeks", "category": "Content", "owner": "Giorgio", "status": "open", "due": "", "notes": "", "order": 8}, {"id": "t15", "title": "Collect Lonza environment content: methodology, CSV, SOPs, templates, tools", "phase": "T–2 weeks", "category": "Content", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 9}, {"id": "t16", "title": "Clear outlook content for sharing (CHI, EaaS, upskilling)", "phase": "T–2 weeks", "category": "Content", "owner": "Kristian", "status": "open", "due": "", "notes": "", "order": 10}, {"id": "t17", "title": "Prepare CHI part of the outlook", "phase": "T–2 weeks", "category": "Content", "owner": "Pedro", "status": "open", "due": "", "notes": "", "order": 11}, {"id": "t18", "title": "Update go-live shout-out list with any new October go-lives", "phase": "T–2 weeks", "category": "Content", "owner": "Sandra", "status": "open", "due": "", "notes": "", "order": 12}, {"id": "t19", "title": "Dry run of all sessions (60 min, online)", "phase": "T–1 week", "category": "Content", "owner": "All", "status": "open", "due": "", "notes": "", "order": 1}, {"id": "t20", "title": "Finalise decks and convert to PowerPoint", "phase": "T–1 week", "category": "Content", "owner": "Kristian", "status": "open", "due": "", "notes": "", "order": 2}, {"id": "t21", "title": "Prepare commitment cards and ELMO card", "phase": "T–1 week", "category": "Materials", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 3}, {"id": "t22", "title": "Print scenario cards, Challenge Lab briefs and agenda", "phase": "T–2 days", "category": "Materials", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 1}, {"id": "t23", "title": "Pack materials: ball, name tags, dot stickers (3 p.p.), moderation cards, markers, timer, Helium Stick", "phase": "T–2 days", "category": "Materials", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 2}, {"id": "t24", "title": "Pre-draw flipcharts (expectations wall, parking lot, exchange columns, clusters, peer-support map, good vs. struggle, lab templates ×3, start/stop/continue)", "phase": "T–2 days", "category": "Materials", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 3}, {"id": "t25", "title": "Set up room and name tags before 14:00", "phase": "Day 1", "category": "Run", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 1}, {"id": "t26", "title": "Photograph all Day 1 flipcharts", "phase": "Day 1", "category": "Run", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 2}, {"id": "t27", "title": "Prepare Day 2 recap slide (evening)", "phase": "Day 1", "category": "Run", "owner": "Kristian", "status": "open", "due": "", "notes": "", "order": 3}, {"id": "t28", "title": "Photograph all Day 2 flipcharts and commitment cards", "phase": "Day 2", "category": "Run", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 1}, {"id": "t29", "title": "Fill debrief deck from outputs (T+3 days)", "phase": "After the workshop", "category": "Follow-up", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 1}, {"id": "t30", "title": "Send follow-up email with debrief deck and actions table (T+5 days)", "phase": "After the workshop", "category": "Follow-up", "owner": "Kristian", "status": "open", "due": "", "notes": "", "order": 2}, {"id": "t31", "title": "Collect PMs' own topics (form or email)", "phase": "After the workshop", "category": "Follow-up", "owner": "Liliana", "status": "open", "due": "", "notes": "", "order": 3}, {"id": "t32", "title": "Track improvement actions; revisit commitments at next Community Call", "phase": "After the workshop", "category": "Follow-up", "owner": "Kristian", "status": "open", "due": "", "notes": "", "order": 4}];
+function persist(){
+  try{localStorage.setItem(KEY,JSON.stringify(tasks));$("saved").textContent="Saved in this browser · "+new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});}
+  catch(_){$("saved").textContent="Not saved — this browser blocks local storage. Use Export.";}
+}
+function sortTasks(){tasks.sort((a,b)=>(PHASES.indexOf(a.phase)-PHASES.indexOf(b.phase))||((a.order||0)-(b.order||0))||String(a.title).localeCompare(b.title));}
+function save(id,patch){
+  const t=tasks.find(x=>x.id===id); if(!t)return;
+  Object.assign(t,patch,{updatedAt:new Date().toISOString()}); sortTasks(); persist(); render();
+}
+$("list").addEventListener("click",async e=>{
+  const card=e.target.closest(".task"); if(!card)return; const id=card.dataset.id;
+  if(e.target.closest("[data-toggle]")){openId=openId===id?null:id;render();return;}
+  if(e.target.closest("[data-del]")){
+    const acts=card.querySelector("[data-acts]");
+    acts.innerHTML=`<span class="note">Delete this task for everyone?</span><button class="btn ghost" type="button" data-cancel>Keep</button><button class="btn danger" type="button" data-confirm>Delete</button>`;
+    return;}
+  if(e.target.closest("[data-cancel]")){render();return;}
+  if(e.target.closest("[data-confirm]")){
+    tasks=tasks.filter(t=>t.id!==id); openId=null; persist(); render();
+  }
+});
+$("list").addEventListener("change",e=>{
+  const f=e.target.dataset.f; if(!f)return; const id=e.target.closest(".task").dataset.id;
+  if(f==="done")return save(id,{status:e.target.checked?"done":"open"});
+  const val=e.target.value; if(f==="title"&&!val.trim())return render();
+  save(id,{[f]:val});
+});
+["q","fPhase","fStatus"].forEach(id=>$(id).addEventListener("input",render));
+
+$("addForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const title=$("nTitle").value.trim(); if(!title)return;
+  const phase=$("nPhase").value;
+  const order=Math.max(0,...tasks.filter(t=>t.phase===phase).map(t=>t.order||0))+1;
+  tasks.push({id:"t"+Date.now().toString(36),title,phase,owner:$("nOwner").value,status:"open",due:$("nDue").value,category:"",notes:"",order,updatedAt:new Date().toISOString()});
+  $("nTitle").value=""; $("nDue").value=""; sortTasks(); persist(); render();
+});
+function download(name,text,type){
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+}
+const stamp=()=>new Date().toISOString().slice(0,10);
+$("exp").onclick=()=>download(`Prague_Workshop_Tasks_${stamp()}.json`,JSON.stringify(tasks,null,2),"application/json");
+$("csv").onclick=()=>{
+  const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
+  const rows=[["Phase","Category","Task","Owner","Status","Due","Notes"]].concat(tasks.map(t=>[t.phase,t.category,t.title,t.owner,STATUS[t.status]||t.status,t.due,t.notes]));
+  download(`Prague_Workshop_Tasks_${stamp()}.csv`,"\ufeff"+rows.map(r=>r.map(q).join(";")).join("\r\n"),"text/csv");
+};
+$("imp").onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  try{const d=JSON.parse(await f.text()); if(!Array.isArray(d)||!d.every(t=>t&&t.id&&t.title))throw 0;
+    tasks=d; sortTasks(); persist(); render(); $("ro").hidden=false; $("ro").textContent=`Imported ${d.length} tasks from ${f.name}.`;}
+  catch(_){$("ro").hidden=false;$("ro").textContent="This file is not a task list export. Choose a JSON file created with Export.";}
+  e.target.value="";
+};
+let resetArmed=false;
+$("reset").onclick=()=>{
+  if(!resetArmed){resetArmed=true;$("reset").textContent="Click again to discard all changes";setTimeout(()=>{resetArmed=false;$("reset").textContent="Reset to original list";},4000);return;}
+  tasks=JSON.parse(JSON.stringify(SEED)); resetArmed=false; $("reset").textContent="Reset to original list"; sortTasks(); persist(); render();
+};
+(function init(){
+  let stored=null; try{stored=JSON.parse(localStorage.getItem(KEY)||"null");}catch(_){}
+  tasks=Array.isArray(stored)&&stored.length?stored:JSON.parse(JSON.stringify(SEED));
+  $("addForm").hidden=false; sortTasks(); render();
+})();
+</script>
+</body></html>
